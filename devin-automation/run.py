@@ -1,6 +1,5 @@
 import os
 import sys
-import time
 import requests
 
 # 必要な環境変数の取得
@@ -72,33 +71,6 @@ def create_session(prompt):
             print(f"Response details: {e.response.text}")
         sys.exit(1)
 
-def monitor_session(session_id):
-    headers = {
-        "Authorization": f"Bearer {DEVIN_API_KEY}",
-    }
-    print(f"\nMonitoring session {session_id} for completion...")
-    
-    while True:
-        try:
-            response = requests.get(f"{DEVIN_API_BASE_URL}/organizations/{DEVIN_ORG_ID}/sessions/{session_id}", headers=headers)
-            response.raise_for_status()
-            data = response.json()
-            status = data.get("status_enum") or data.get("status", "unknown")
-            
-            print(f"[Status Update] Session {session_id} is currently: {status}")
-            
-            # Terminal states in Devin API v3 indicate we should stop polling.
-            # Reference: https://docs.devin.ai/api-reference/v3/sessions/get-organizations-session
-            if status in ["exit", "error", "suspended"]:
-                print(f"🏁 Session finished monitoring with status: {status}")
-                return status
-                
-        except requests.exceptions.RequestException as e:
-            print(f"⚠️ Error checking status: {e}")
-            
-        # 1分ごとにステータスをチェック
-        time.sleep(60)
-
 def main():
     if not DEVIN_API_KEY:
         print("❌ Error: DEVIN_API_KEY environment variable is not set.")
@@ -120,24 +92,34 @@ The issue details can be found at this URL: {ISSUE_URL}
 Please follow these instructions exactly:
 1. Clone the repository at https://github.com/{GITHUB_REPOSITORY}.git using --depth 1 to save time
 2. Read the details of the issue carefully.
-3. Fix the issue in the code.
-4. Run tests or validations if applicable.
-5. Create a new branch, commit your changes, and create a Pull Request against the repository. 
-6. Ensure the PR title is descriptive and the description mentions 'Fixes {ISSUE_URL}'.
-7. Stop the session once the PR is successfully created.
+3. [IMPORTANT] Before you start making changes, post a comment on the original issue ({ISSUE_URL}) explaining your planned approach, using the provided GITHUB_TOKEN in your environment.
+4. Fix the issue in the code.
+5. Run tests or validations if applicable.
+6. Create a new branch, commit your changes, and create a Pull Request against the repository. 
+7. Ensure the PR title is descriptive and the description mentions 'Fixes {ISSUE_URL}'.
+8. [IMPORTANT] After the PR is successfully created (or if you encounter an unrecoverable failure), post a detailed comment on the original issue ({ISSUE_URL}) summarizing:
+   - The exact changes you made (with a brief technical explanation)
+   - The test/validation results
+   - A link to the created Pull Request (if successful) or error details (if failed)
+9. Stop the session once the PR is successfully created or the failure is reported.
+
+Note: You can use the `gh` CLI (which is pre-authenticated via the GITHUB_TOKEN in your environment) or standard HTTP requests to GitHub's REST API to post comments to the issue.
 """
     
     session_id, session_url = create_session(prompt)
     
     start_msg = f"🚀 **Devin** has started investigating this issue.\n\n🔗 [View Devin Session]({session_url})"
     post_github_comment(start_msg)
-    write_step_summary(f"### 🚀 Devin Session Started\n- **Issue:** {ISSUE_URL}\n- **Session:** [View on Devin]({session_url})")
     
-    final_status = monitor_session(session_id)
-    
-    end_msg = f"🏁 **Devin** session finished with status: `{final_status}`.\n\n🔗 [View Devin Session]({session_url})"
-    post_github_comment(end_msg)
-    write_step_summary(f"### 🏁 Devin Session Finished\n- **Status:** `{final_status}`\n- **Session:** [View on Devin]({session_url})")
+    print("⚡ Session successfully initiated. Skipping active session monitoring (Async Mode).")
+    print(f"🔗 Devin will self-report its progress directly to the issue: {ISSUE_URL}")
+    write_step_summary(
+        f"### 🚀 Devin Session Started (Async Mode)\n"
+        f"- **Issue:** {ISSUE_URL}\n"
+        f"- **Session Link:** [View Devin Session]({session_url})\n\n"
+        f"> ⚡ **Note:** This workflow finished immediately in async mode. "
+        f"Devin is working in the background and will report progress directly on the GitHub Issue."
+    )
 
 if __name__ == "__main__":
     main()
