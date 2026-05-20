@@ -14,7 +14,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-from typing import Optional, Union
+from __future__ import annotations
 
 import pandas as pd
 from flask_babel import gettext as _
@@ -27,7 +27,7 @@ def resample(
     df: pd.DataFrame,
     rule: str,
     method: str,
-    fill_value: Optional[Union[float, int]] = None,
+    fill_value: float | int | None = None,
 ) -> pd.DataFrame:
     """
     support upsampling in resample
