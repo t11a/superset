@@ -14,10 +14,11 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+from __future__ import annotations
 
 import logging
 from collections.abc import Generator
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 import backoff
 
@@ -28,8 +29,8 @@ def retry_call(  # pylint: disable=too-many-arguments
     strategy: Callable[..., Generator[int, None, None]] = backoff.constant,
     exception: type[Exception] = Exception,
     giveup_log_level: int = logging.WARNING,
-    fargs: Optional[list[Any]] = None,
-    fkwargs: Optional[dict[str, Any]] = None,
+    fargs: list[Any] | None = None,
+    fkwargs: dict[str, Any] | None = None,
     **kwargs: Any,
 ) -> Any:
     """

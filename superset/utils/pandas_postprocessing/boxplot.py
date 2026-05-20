@@ -14,7 +14,9 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-from typing import Any, Callable, Optional, Union
+from __future__ import annotations
+
+from typing import Any, Callable
 
 import numpy as np
 from flask_babel import gettext as _
@@ -30,9 +32,7 @@ def boxplot(  # noqa: C901
     groupby: list[str],
     metrics: list[str],
     whisker_type: PostProcessingBoxplotWhiskerType,
-    percentiles: Optional[
-        Union[list[Union[int, float]], tuple[Union[int, float], Union[int, float]]]
-    ] = None,
+    percentiles: (list[int | float] | tuple[int | float, int | float] | None) = None,
 ) -> DataFrame:
     """
     Calculate boxplot statistics. For each metric, the operation creates eight
@@ -117,7 +117,7 @@ def boxplot(  # noqa: C901
         "count": np.ma.count,
         "outliers": outliers,
     }
-    aggregates: dict[str, dict[str, Union[str, Callable[..., Any]]]] = {
+    aggregates: dict[str, dict[str, str | Callable[..., Any]]] = {
         f"{metric}__{operator_name}": {"column": metric, "operator": operator}
         for operator_name, operator in operators.items()
         for metric in metrics
