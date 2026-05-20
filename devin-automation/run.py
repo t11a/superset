@@ -83,7 +83,7 @@ You are tasked with fixing a reported issue in the {GITHUB_REPOSITORY} repositor
 The issue details can be found at this URL: {ISSUE_URL}
 
 Please follow these instructions exactly:
-1. Clone the repository at https://github.com/{GITHUB_REPOSITORY}.git
+1. Clone the repository at https://github.com/{GITHUB_REPOSITORY}.git using --depth 1 to save time
 2. Read the details of the issue carefully.
 3. Fix the issue in the code.
 4. Run tests or validations if applicable.
