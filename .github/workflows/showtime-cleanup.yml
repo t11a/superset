@@ -2,8 +2,8 @@ name: 🎪 Showtime Cleanup
 
 # Scheduled cleanup of expired environments
 on:
-  schedule:
-    - cron: '0 */6 * * *'  # Every 6 hours
+#  schedule:
+#    - cron: '0 */6 * * *'  # Every 6 hours
 
   # Manual trigger for testing
   workflow_dispatch:

@@ -1,0 +1,33 @@
+name: Trigger Devin Automation
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  run-devin:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Build Docker image
+        run: |
+          cd devin-automation
+          docker build -t devin-automation .
+
+      - name: Run Devin Automation
+        env:
+          DEVIN_API_KEY: ${{ secrets.DEVIN_API_KEY }}
+          DEVIN_ORG_ID: ${{ secrets.DEVIN_ORG_ID }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+        run: |
+          docker run --rm \
+            -e DEVIN_API_KEY \
+            -e DEVIN_ORG_ID \
+            -e GITHUB_TOKEN \
+            -e GITHUB_REPOSITORY \
+            -e ISSUE_URL \
+            devin-automation
