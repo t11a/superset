@@ -12,6 +12,40 @@ DEVIN_ORG_ID = os.environ.get("DEVIN_ORG_ID")
 
 DEVIN_API_BASE_URL = "https://api.devin.ai/v3"
 
+def write_step_summary(text):
+    summary_file = os.environ.get("GITHUB_STEP_SUMMARY")
+    if summary_file:
+        try:
+            with open(summary_file, "a") as f:
+                f.write(text + "\n")
+        except Exception as e:
+            print(f"⚠️ Failed to write to GITHUB_STEP_SUMMARY: {e}")
+
+def post_github_comment(comment_body):
+    if not GITHUB_TOKEN or not GITHUB_REPOSITORY or not ISSUE_URL:
+        print("Skipping GitHub comment (missing credentials/info).")
+        return
+        
+    try:
+        issue_number = ISSUE_URL.split("/")[-1]
+    except Exception:
+        print("Could not parse issue number from ISSUE_URL.")
+        return
+
+    url = f"https://api.github.com/repos/{GITHUB_REPOSITORY}/issues/{issue_number}/comments"
+    headers = {
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+    payload = {"body": comment_body}
+    
+    try:
+        response = requests.post(url, headers=headers, json=payload)
+        response.raise_for_status()
+        print("✅ Successfully posted comment to GitHub issue.")
+    except Exception as e:
+        print(f"⚠️ Failed to post comment to GitHub issue: {e}")
+
 def create_session(prompt):
     headers = {
         "Authorization": f"Bearer {DEVIN_API_KEY}",
@@ -31,7 +65,7 @@ def create_session(prompt):
         print(f"✅ Successfully created session!")
         print(f"🔗 Session ID: {session_id}")
         print(f"🔗 Session URL: {session_url}")
-        return session_id
+        return session_id, session_url
     except requests.exceptions.RequestException as e:
         print(f"❌ Failed to create session: {e}")
         if e.response is not None:
@@ -56,7 +90,7 @@ def monitor_session(session_id):
             # blocked, stopped, or error states indicate we should stop polling
             if status in ["stopped", "blocked", "failed", "completed"]:
                 print(f"🏁 Session finished monitoring with status: {status}")
-                break
+                return status
                 
         except requests.exceptions.RequestException as e:
             print(f"⚠️ Error checking status: {e}")
@@ -92,8 +126,17 @@ Please follow these instructions exactly:
 7. Stop the session once the PR is successfully created.
 """
     
-    session_id = create_session(prompt)
-    monitor_session(session_id)
+    session_id, session_url = create_session(prompt)
+    
+    start_msg = f"🚀 **Devin** has started investigating this issue.\n\n🔗 [View Devin Session]({session_url})"
+    post_github_comment(start_msg)
+    write_step_summary(f"### 🚀 Devin Session Started\n- **Issue:** {ISSUE_URL}\n- **Session:** [View on Devin]({session_url})")
+    
+    final_status = monitor_session(session_id)
+    
+    end_msg = f"🏁 **Devin** session finished with status: `{final_status}`.\n\n🔗 [View Devin Session]({session_url})"
+    post_github_comment(end_msg)
+    write_step_summary(f"### 🏁 Devin Session Finished\n- **Status:** `{final_status}`\n- **Session:** [View on Devin]({session_url})")
 
 if __name__ == "__main__":
     main()
