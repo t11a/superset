@@ -7,6 +7,9 @@ on:
 jobs:
   run-devin:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
