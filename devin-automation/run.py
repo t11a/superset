@@ -87,8 +87,9 @@ def monitor_session(session_id):
             
             print(f"[Status Update] Session {session_id} is currently: {status}")
             
-            # blocked, stopped, or error states indicate we should stop polling
-            if status in ["stopped", "blocked", "failed", "completed"]:
+            # Terminal states in Devin API v3 indicate we should stop polling.
+            # Reference: https://docs.devin.ai/api-reference/v3/sessions/get-organizations-session
+            if status in ["exit", "error", "suspended"]:
                 print(f"🏁 Session finished monitoring with status: {status}")
                 return status
                 
